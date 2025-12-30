@@ -1,4 +1,3 @@
-<style>
     :root {
       /* Light mode colors */
       --bg-primary: #f9fafb;
@@ -282,4 +281,3 @@
     .status-indicator.done {
       background-color: #10b981;
     }
-  </style>
