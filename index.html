@@ -7,7 +7,7 @@
   <title>Kanban Board</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
+
 </head>
 
 <body class="bg-theme-primary min-h-screen theme-transition">
@@ -24,20 +24,24 @@
           <p class="text-sm text-theme-secondary">Organize your work efficiently</p>
         </div>
       </div>
-      
+
       <div class="flex items-center space-x-3">
         <!-- Theme Toggle -->
-        <button id="theme-toggle" class="p-2 rounded-lg bg-theme-tertiary text-theme-secondary hover:text-theme-primary theme-transition" aria-label="Toggle theme">
+        <button id="theme-toggle"
+          class="p-2 rounded-lg bg-theme-tertiary text-theme-secondary hover:text-theme-primary theme-transition"
+          aria-label="Toggle theme">
           <i class="fas fa-moon"></i>
         </button>
-        
+
         <!-- Stats Badge -->
         <div class="hidden md:block px-3 py-1 rounded-full bg-theme-tertiary text-theme-secondary text-sm">
           <span id="total-tasks">0</span> tasks
         </div>
-        
+
         <!-- Add Task Button -->
-        <button id="add-task-btn" class="px-4 py-2 rounded-lg text-white font-medium flex items-center space-x-2 theme-transition" style="background-color: var(--accent-color);">
+        <button id="add-task-btn"
+          class="px-4 py-2 rounded-lg text-white font-medium flex items-center space-x-2 theme-transition"
+          style="background-color: var(--accent-color);">
           <i class="fas fa-plus"></i>
           <span>Add Task</span>
         </button>
@@ -75,7 +79,8 @@
           </div>
           <div class="flex items-center space-x-2">
             <span class="px-2 py-1 rounded-full text-xs font-bold status-backlog" id="backlog-count">0</span>
-            <button class="p-1 text-theme-secondary hover:text-theme-primary theme-transition" title="Add task to backlog">
+            <button class="p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+              title="Add task to backlog">
               <i class="fas fa-plus"></i>
             </button>
           </div>
@@ -85,7 +90,8 @@
           <div class="empty-state text-center py-8">
             <i class="fas fa-inbox text-2xl mb-2"></i>
             <p class="text-sm">No tasks in backlog</p>
-            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition" data-status="backlog">
+            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+              data-status="backlog">
               Add your first task
             </button>
           </div>
@@ -101,7 +107,8 @@
           </div>
           <div class="flex items-center space-x-2">
             <span class="px-2 py-1 rounded-full text-xs font-bold status-in-progress" id="in-progress-count">0</span>
-            <button class="p-1 text-theme-secondary hover:text-theme-primary theme-transition" title="Add task to in progress">
+            <button class="p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+              title="Add task to in progress">
               <i class="fas fa-plus"></i>
             </button>
           </div>
@@ -111,7 +118,8 @@
           <div class="empty-state text-center py-8">
             <i class="fas fa-spinner text-2xl mb-2"></i>
             <p class="text-sm">No tasks in progress</p>
-            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition" data-status="in-progress">
+            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+              data-status="in-progress">
               Move a task here
             </button>
           </div>
@@ -127,7 +135,8 @@
           </div>
           <div class="flex items-center space-x-2">
             <span class="px-2 py-1 rounded-full text-xs font-bold status-in-review" id="in-review-count">0</span>
-            <button class="p-1 text-theme-secondary hover:text-theme-primary theme-transition" title="Add task to in review">
+            <button class="p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+              title="Add task to in review">
               <i class="fas fa-plus"></i>
             </button>
           </div>
@@ -137,7 +146,8 @@
           <div class="empty-state text-center py-8">
             <i class="fas fa-eye text-2xl mb-2"></i>
             <p class="text-sm">No tasks in review</p>
-            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition" data-status="in-review">
+            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+              data-status="in-review">
               Add review task
             </button>
           </div>
@@ -163,7 +173,8 @@
           <div class="empty-state text-center py-8">
             <i class="fas fa-check-circle text-2xl mb-2"></i>
             <p class="text-sm">No completed tasks</p>
-            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition" data-status="done">
+            <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+              data-status="done">
               Mark a task done
             </button>
           </div>
@@ -207,16 +218,22 @@
           <label for="task-title" class="block text-sm font-medium text-theme-primary mb-1">
             Title <span class="text-red-500">*</span>
           </label>
-          <input type="text" id="task-title" class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2" style="border-color: var(--border-color);" placeholder="Enter task title" required />
+          <input type="text" id="task-title"
+            class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+            style="border-color: var(--border-color);" placeholder="Enter task title" required />
         </div>
         <div class="mb-4">
           <label for="task-description" class="block text-sm font-medium text-theme-primary mb-1">Description</label>
-          <textarea id="task-description" rows="3" class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2" style="border-color: var(--border-color);" placeholder="Enter task description"></textarea>
+          <textarea id="task-description" rows="3"
+            class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+            style="border-color: var(--border-color);" placeholder="Enter task description"></textarea>
         </div>
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label for="task-status" class="block text-sm font-medium text-theme-primary mb-1">Status</label>
-            <select id="task-status" class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2" style="border-color: var(--border-color);">
+            <select id="task-status"
+              class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+              style="border-color: var(--border-color);">
               <option value="backlog">Backlog</option>
               <option value="in-progress">In Progress</option>
               <option value="in-review">In Review</option>
@@ -225,7 +242,9 @@
           </div>
           <div>
             <label for="task-priority" class="block text-sm font-medium text-theme-primary mb-1">Priority</label>
-            <select id="task-priority" class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2" style="border-color: var(--border-color);">
+            <select id="task-priority"
+              class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+              style="border-color: var(--border-color);">
               <option value="low">Low</option>
               <option value="medium" selected>Medium</option>
               <option value="high">High</option>
@@ -234,13 +253,17 @@
         </div>
         <div class="mb-6">
           <label for="task-due-date" class="block text-sm font-medium text-theme-primary mb-1">Due Date</label>
-          <input type="date" id="task-due-date" class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2" style="border-color: var(--border-color);" />
+          <input type="date" id="task-due-date"
+            class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+            style="border-color: var(--border-color);" />
         </div>
         <div class="flex justify-end space-x-3">
-          <button type="button" id="cancel-task" class="px-4 py-2 border border-theme rounded-lg text-theme-primary hover:bg-theme-tertiary theme-transition">
+          <button type="button" id="cancel-task"
+            class="px-4 py-2 border border-theme rounded-lg text-theme-primary hover:bg-theme-tertiary theme-transition">
             Cancel
           </button>
-          <button type="submit" class="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 theme-transition" style="background-color: var(--accent-color);">
+          <button type="submit" class="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 theme-transition"
+            style="background-color: var(--accent-color);">
             Add Task
           </button>
         </div>
@@ -290,13 +313,18 @@
         <div class="border-t border-theme pt-4">
           <h5 class="text-sm font-semibold text-theme-primary mb-3">Actions</h5>
           <div class="flex space-x-2">
-            <button id="edit-task-btn" class="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 theme-transition" style="background-color: var(--info-color);">
+            <button id="edit-task-btn"
+              class="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 theme-transition"
+              style="background-color: var(--info-color);">
               <i class="fas fa-edit mr-2"></i> Edit
             </button>
-            <button id="delete-task-btn" class="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 theme-transition" style="background-color: var(--danger-color);">
+            <button id="delete-task-btn"
+              class="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 theme-transition"
+              style="background-color: var(--danger-color);">
               <i class="fas fa-trash mr-2"></i> Delete
             </button>
-            <button id="move-task-btn" class="flex-1 px-4 py-2 rounded-lg text-sm font-medium border border-theme text-theme-primary hover:bg-theme-tertiary theme-transition">
+            <button id="move-task-btn"
+              class="flex-1 px-4 py-2 rounded-lg text-sm font-medium border border-theme text-theme-primary hover:bg-theme-tertiary theme-transition">
               <i class="fas fa-arrows-alt mr-2"></i> Move
             </button>
           </div>
@@ -318,19 +346,23 @@
       <div class="p-6">
         <p class="text-theme-secondary mb-4">Select new status:</p>
         <div class="space-y-2">
-          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition" data-status="backlog">
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="backlog">
             <span class="status-indicator backlog mr-3"></span>
             <span class="text-theme-primary">Backlog</span>
           </button>
-          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition" data-status="in-progress">
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="in-progress">
             <span class="status-indicator in-progress mr-3"></span>
             <span class="text-theme-primary">In Progress</span>
           </button>
-          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition" data-status="in-review">
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="in-review">
             <span class="status-indicator in-review mr-3"></span>
             <span class="text-theme-primary">In Review</span>
           </button>
-          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition" data-status="done">
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="done">
             <span class="status-indicator done mr-3"></span>
             <span class="text-theme-primary">Done</span>
           </button>
@@ -340,14 +372,15 @@
   </div>
 
   <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-4 right-4 bg-theme-secondary text-theme-primary px-6 py-3 rounded-lg shadow-2xl z-50 hidden theme-transition">
+  <div id="toast"
+    class="fixed bottom-4 right-4 bg-theme-secondary text-theme-primary px-6 py-3 rounded-lg shadow-2xl z-50 hidden theme-transition">
     <div class="flex items-center">
       <i id="toast-icon" class="fas fa-check-circle mr-3" style="color: var(--success-color);"></i>
       <span id="toast-message">Task added successfully!</span>
     </div>
   </div>
 
-  
+
 </body>
 
 </html>
