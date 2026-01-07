@@ -1,4 +1,4 @@
-  <script>
+
     document.addEventListener("DOMContentLoaded", function () {
       // DOM Elements
       const board = document.getElementById("board");
@@ -719,4 +719,4 @@
       // Initialize the application
       initApp();
     });
-  </script>
+  
