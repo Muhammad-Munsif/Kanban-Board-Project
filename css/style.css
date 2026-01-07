@@ -1,4 +1,4 @@
-  <style>
+
     :root {
       /* Light mode colors */
       --bg-primary: #f9fafb;
@@ -409,4 +409,4 @@
     .modal-overlay {
       background-color: var(--modal-overlay);
     }
-  </style>
+  
