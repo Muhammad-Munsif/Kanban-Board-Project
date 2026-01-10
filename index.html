@@ -150,6 +150,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -454,6 +455,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -710,7 +712,8 @@
 
           <div class="flex items-center space-x-3">
             <!-- Stats Badge -->
-            <div class="hidden md:block px-3 py-1 rounded-full bg-theme-tertiary text-theme-secondary text-sm" id="stats-badge">
+            <div class="hidden md:block px-3 py-1 rounded-full bg-theme-tertiary text-theme-secondary text-sm"
+              id="stats-badge">
               <span id="total-tasks">0</span> tasks
             </div>
 
@@ -782,7 +785,8 @@
                 <div class="empty-state text-center py-8">
                   <i class="fas fa-inbox text-2xl mb-2"></i>
                   <p class="text-sm">No tasks in backlog</p>
-                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                  <button
+                    class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
                     data-status="backlog">
                     Add your first task
                   </button>
@@ -811,7 +815,8 @@
                 <div class="empty-state text-center py-8">
                   <i class="fas fa-spinner text-2xl mb-2"></i>
                   <p class="text-sm">No tasks in progress</p>
-                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                  <button
+                    class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
                     data-status="in-progress">
                     Move a task here
                   </button>
@@ -839,7 +844,8 @@
                 <div class="empty-state text-center py-8">
                   <i class="fas fa-eye text-2xl mb-2"></i>
                   <p class="text-sm">No tasks in review</p>
-                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                  <button
+                    class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
                     data-status="in-review">
                     Add review task
                   </button>
@@ -867,7 +873,8 @@
                 <div class="empty-state text-center py-8">
                   <i class="fas fa-check-circle text-2xl mb-2"></i>
                   <p class="text-sm">No completed tasks</p>
-                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                  <button
+                    class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
                     data-status="done">
                     Mark a task done
                   </button>
@@ -970,7 +977,8 @@
                 <button id="next-month" class="p-2 text-theme-secondary hover:text-theme-primary">
                   <i class="fas fa-chevron-right"></i>
                 </button>
-                <button id="today-btn" class="px-4 py-2 rounded-lg text-white" style="background-color: var(--accent-color);">
+                <button id="today-btn" class="px-4 py-2 rounded-lg text-white"
+                  style="background-color: var(--accent-color);">
                   Today
                 </button>
               </div>
@@ -1147,7 +1155,8 @@
             <!-- Team member cards will be loaded here -->
             <div class="team-card bg-theme-secondary rounded-xl p-6 shadow-theme">
               <div class="flex flex-col items-center text-center">
-                <div class="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
+                <div
+                  class="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
                   JD
                 </div>
                 <h3 class="text-lg font-semibold text-theme-primary mb-1">John Doe</h3>
@@ -1443,7 +1452,7 @@
       const searchContainer = document.getElementById('search-container');
       const globalSearch = document.getElementById('global-search');
       const statsBadge = document.getElementById('stats-badge');
-      
+
       // Initialize pages
       let currentPage = 'board';
       const pages = {
@@ -1541,8 +1550,8 @@
 
       // Update add button action based on current page
       function updateAddButtonAction(page) {
-        addContextBtn.onclick = function() {
-          switch(page) {
+        addContextBtn.onclick = function () {
+          switch (page) {
             case 'board':
             case 'my-tasks':
               document.getElementById('task-modal').classList.remove('hidden');
@@ -1588,7 +1597,7 @@
               className: 'event-type-reminder'
             }
           ],
-          eventClick: function(info) {
+          eventClick: function (info) {
             alert('Event: ' + info.event.title);
           }
         });
@@ -1598,9 +1607,9 @@
         // Update current month display
         const currentMonthEl = document.getElementById('current-month');
         const currentDate = calendar.getDate();
-        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', { 
-          month: 'long', 
-          year: 'numeric' 
+        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric'
         });
 
         // Calendar controls
@@ -1621,7 +1630,7 @@
 
         // View switching
         document.querySelectorAll('[data-view]').forEach(btn => {
-          btn.onclick = function() {
+          btn.onclick = function () {
             const view = this.dataset.view;
             document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
@@ -1633,9 +1642,9 @@
       function updateCurrentMonth(calendar) {
         const currentMonthEl = document.getElementById('current-month');
         const currentDate = calendar.getDate();
-        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', { 
-          month: 'long', 
-          year: 'numeric' 
+        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric'
         });
       }
 
@@ -1741,7 +1750,7 @@
       // Initialize Team Page
       function initializeTeam() {
         // Add team member functionality
-        document.getElementById('add-team-member-btn').onclick = function() {
+        document.getElementById('add-team-member-btn').onclick = function () {
           const name = document.getElementById('team-member-name').value;
           const email = document.getElementById('team-member-email').value;
           const role = document.getElementById('team-member-role').value;
@@ -1765,7 +1774,7 @@
         const sortSelect = document.getElementById('my-tasks-sort');
 
         [statusFilter, priorityFilter, sortSelect].forEach(select => {
-          select.onchange = function() {
+          select.onchange = function () {
             filterMyTasks();
           };
         });
@@ -1815,14 +1824,14 @@
 
       // Event Listeners for Navigation
       sidebarMenuItems.forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
           const page = this.dataset.page;
           navigateToPage(page);
         });
       });
 
       // Global search functionality
-      globalSearch.addEventListener('input', function(e) {
+      globalSearch.addEventListener('input', function (e) {
         const searchTerm = e.target.value.toLowerCase();
         // Search logic would go here based on current page
         console.log(`Searching for: ${searchTerm} on ${currentPage} page`);
@@ -1841,7 +1850,7 @@
 
   <!-- Include your existing board functionality script here -->
   <!-- Make sure to wrap it in a function and call it when board page is active -->
-  <script>
+  <script src="js/script.js">
     // Your existing board functionality code
     // ... (paste your existing script.js code here)
     // Make sure to only initialize board functionality when on board page
