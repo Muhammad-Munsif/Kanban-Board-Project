@@ -784,7 +784,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize the application
   initApp();
 });
-<script>
+
     document.addEventListener("DOMContentLoaded", function () {
       // DOM Elements
       const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
@@ -1192,4 +1192,4 @@ document.addEventListener("DOMContentLoaded", function () {
       // with the new multi-page structure
 
     });
-  </script>
+  
