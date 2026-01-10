@@ -784,3 +784,412 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize the application
   initApp();
 });
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // DOM Elements
+      const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+      const pageContents = document.querySelectorAll('.page-content');
+      const pageTitle = document.getElementById('page-title');
+      const pageSubtitle = document.getElementById('page-subtitle');
+      const pageTitleDesktop = document.getElementById('page-title-desktop');
+      const pageSubtitleDesktop = document.getElementById('page-subtitle-desktop');
+      const addContextBtn = document.getElementById('add-context-btn');
+      const addBtnText = document.getElementById('add-btn-text');
+      const searchContainer = document.getElementById('search-container');
+      const globalSearch = document.getElementById('global-search');
+      const statsBadge = document.getElementById('stats-badge');
+
+      // Initialize pages
+      let currentPage = 'board';
+      const pages = {
+        'board': {
+          title: 'Kanban Board',
+          subtitle: 'Organize your work efficiently',
+          addBtnText: 'Add Task',
+          showSearch: true,
+          showStats: true
+        },
+        'my-tasks': {
+          title: 'My Tasks',
+          subtitle: 'Tasks assigned to you',
+          addBtnText: 'Add Task',
+          showSearch: true,
+          showStats: true
+        },
+        'calendar': {
+          title: 'Calendar',
+          subtitle: 'Schedule and manage deadlines',
+          addBtnText: 'Add Event',
+          showSearch: false,
+          showStats: false
+        },
+        'analytics': {
+          title: 'Analytics',
+          subtitle: 'Track productivity and performance',
+          addBtnText: 'Export Report',
+          showSearch: false,
+          showStats: false
+        },
+        'team': {
+          title: 'Team',
+          subtitle: 'Manage team members and projects',
+          addBtnText: 'Add Member',
+          showSearch: true,
+          showStats: false
+        }
+      };
+
+      // Page Navigation
+      function navigateToPage(page) {
+        // Update active menu item
+        sidebarMenuItems.forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.page === page) {
+            item.classList.add('active');
+          }
+        });
+
+        // Update active page content
+        pageContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === `${page}-page`) {
+            content.classList.add('active');
+          }
+        });
+
+        // Update page titles
+        const pageConfig = pages[page];
+        pageTitle.textContent = pageConfig.title;
+        pageSubtitle.textContent = pageConfig.subtitle;
+        pageTitleDesktop.textContent = pageConfig.title;
+        pageSubtitleDesktop.textContent = pageConfig.subtitle;
+        addBtnText.textContent = pageConfig.addBtnText;
+
+        // Update UI elements based on page
+        searchContainer.style.display = pageConfig.showSearch ? 'block' : 'none';
+        statsBadge.style.display = pageConfig.showStats ? 'block' : 'none';
+
+        // Update context button action
+        updateAddButtonAction(page);
+
+        currentPage = page;
+
+        // Initialize page-specific functionality
+        if (page === 'calendar') {
+          initializeCalendar();
+        } else if (page === 'analytics') {
+          initializeAnalytics();
+        } else if (page === 'team') {
+          initializeTeam();
+        } else if (page === 'my-tasks') {
+          initializeMyTasks();
+        }
+
+        // Close sidebar on mobile
+        if (window.innerWidth <= 1024) {
+          const sidebar = document.getElementById('sidebar');
+          const sidebarOverlay = document.getElementById('sidebar-overlay');
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      }
+
+      // Update add button action based on current page
+      function updateAddButtonAction(page) {
+        addContextBtn.onclick = function () {
+          switch (page) {
+            case 'board':
+            case 'my-tasks':
+              document.getElementById('task-modal').classList.remove('hidden');
+              document.body.style.overflow = 'hidden';
+              break;
+            case 'calendar':
+              // Show quick add event form
+              document.getElementById('event-title').focus();
+              break;
+            case 'analytics':
+              exportAnalyticsReport();
+              break;
+            case 'team':
+              document.getElementById('team-member-name').focus();
+              break;
+          }
+        };
+      }
+
+      // Initialize Calendar
+      function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          headerToolbar: false,
+          themeSystem: 'bootstrap',
+          events: [
+            {
+              title: 'Team Meeting',
+              start: new Date(),
+              className: 'event-type-meeting'
+            },
+            {
+              title: 'Project Deadline',
+              start: new Date(new Date().setDate(new Date().getDate() + 5)),
+              className: 'event-type-deadline'
+            },
+            {
+              title: 'Client Review',
+              start: new Date(new Date().setDate(new Date().getDate() + 10)),
+              className: 'event-type-reminder'
+            }
+          ],
+          eventClick: function (info) {
+            alert('Event: ' + info.event.title);
+          }
+        });
+
+        calendar.render();
+
+        // Update current month display
+        const currentMonthEl = document.getElementById('current-month');
+        const currentDate = calendar.getDate();
+        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric'
+        });
+
+        // Calendar controls
+        document.getElementById('prev-month').onclick = () => {
+          calendar.prev();
+          updateCurrentMonth(calendar);
+        };
+
+        document.getElementById('next-month').onclick = () => {
+          calendar.next();
+          updateCurrentMonth(calendar);
+        };
+
+        document.getElementById('today-btn').onclick = () => {
+          calendar.today();
+          updateCurrentMonth(calendar);
+        };
+
+        // View switching
+        document.querySelectorAll('[data-view]').forEach(btn => {
+          btn.onclick = function () {
+            const view = this.dataset.view;
+            document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            calendar.changeView(view + (view === 'list' ? 'Month' : ''));
+          };
+        });
+      }
+
+      function updateCurrentMonth(calendar) {
+        const currentMonthEl = document.getElementById('current-month');
+        const currentDate = calendar.getDate();
+        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+
+      // Initialize Analytics
+      function initializeAnalytics() {
+        // Status Distribution Chart
+        const statusCtx = document.getElementById('status-chart').getContext('2d');
+        new Chart(statusCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Backlog', 'In Progress', 'In Review', 'Done'],
+            datasets: [{
+              data: [12, 8, 5, 15],
+              backgroundColor: [
+                '#6b7280',
+                '#3b82f6',
+                '#f59e0b',
+                '#10b981'
+              ],
+              borderWidth: 2,
+              borderColor: 'var(--bg-secondary)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: 'var(--text-primary)',
+                  padding: 20
+                }
+              }
+            }
+          }
+        });
+
+        // Priority Distribution Chart
+        const priorityCtx = document.getElementById('priority-chart').getContext('2d');
+        new Chart(priorityCtx, {
+          type: 'bar',
+          data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+              label: 'Tasks',
+              data: [8, 15, 12],
+              backgroundColor: [
+                '#ef4444',
+                '#f59e0b',
+                '#10b981'
+              ],
+              borderWidth: 0,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'var(--border-color)'
+                },
+                ticks: {
+                  color: 'var(--text-secondary)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: 'var(--text-secondary)'
+                }
+              }
+            }
+          }
+        });
+
+        // Update analytics stats
+        updateAnalyticsStats();
+      }
+
+      function updateAnalyticsStats() {
+        // Simulate data
+        document.getElementById('analytics-total-tasks').textContent = '40';
+        document.getElementById('analytics-completed-tasks').textContent = '15';
+        document.getElementById('analytics-avg-time').textContent = '5.2d';
+        document.getElementById('analytics-overdue-tasks').textContent = '3';
+      }
+
+      function exportAnalyticsReport() {
+        showToast('Analytics report exported successfully!', 'success');
+      }
+
+      // Initialize Team Page
+      function initializeTeam() {
+        // Add team member functionality
+        document.getElementById('add-team-member-btn').onclick = function () {
+          const name = document.getElementById('team-member-name').value;
+          const email = document.getElementById('team-member-email').value;
+          const role = document.getElementById('team-member-role').value;
+
+          if (name && email) {
+            showToast(`Team member ${name} added successfully!`, 'success');
+            document.getElementById('team-member-name').value = '';
+            document.getElementById('team-member-email').value = '';
+            document.getElementById('team-member-role').value = 'developer';
+          } else {
+            showToast('Please fill in all required fields', 'error');
+          }
+        };
+      }
+
+      // Initialize My Tasks Page
+      function initializeMyTasks() {
+        // Filter functionality
+        const statusFilter = document.getElementById('my-tasks-status-filter');
+        const priorityFilter = document.getElementById('my-tasks-priority-filter');
+        const sortSelect = document.getElementById('my-tasks-sort');
+
+        [statusFilter, priorityFilter, sortSelect].forEach(select => {
+          select.onchange = function () {
+            filterMyTasks();
+          };
+        });
+
+        // Initial filter
+        filterMyTasks();
+      }
+
+      function filterMyTasks() {
+        // This would filter and display tasks based on selections
+        // For now, just show a message
+        const container = document.getElementById('my-tasks-container');
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <i class="fas fa-filter text-4xl text-theme-secondary mb-4"></i>
+            <h3 class="text-xl font-semibold text-theme-primary mb-2">Filter Applied</h3>
+            <p class="text-theme-secondary">Your filtered tasks will appear here</p>
+          </div>
+        `;
+      }
+
+      // Toast Notification Function
+      function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toast-icon');
+        const toastMessage = document.getElementById('toast-message');
+
+        toastMessage.textContent = message;
+
+        if (type === 'error') {
+          toastIcon.className = 'fas fa-exclamation-circle mr-3';
+          toastIcon.style.color = 'var(--danger-color)';
+        } else if (type === 'warning') {
+          toastIcon.className = 'fas fa-exclamation-triangle mr-3';
+          toastIcon.style.color = 'var(--warning-color)';
+        } else {
+          toastIcon.className = 'fas fa-check-circle mr-3';
+          toastIcon.style.color = 'var(--success-color)';
+        }
+
+        toast.classList.remove('hidden');
+
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+
+      // Event Listeners for Navigation
+      sidebarMenuItems.forEach(item => {
+        item.addEventListener('click', function () {
+          const page = this.dataset.page;
+          navigateToPage(page);
+        });
+      });
+
+      // Global search functionality
+      globalSearch.addEventListener('input', function (e) {
+        const searchTerm = e.target.value.toLowerCase();
+        // Search logic would go here based on current page
+        console.log(`Searching for: ${searchTerm} on ${currentPage} page`);
+      });
+
+      // Initialize with Board page
+      navigateToPage('board');
+
+      // Keep existing functionality for Board page (tasks, drag & drop, etc.)
+      // ... (Your existing board functionality code goes here)
+      // Note: You'll need to integrate your existing board functionality
+      // with the new multi-page structure
+
+    });
+  </script>
