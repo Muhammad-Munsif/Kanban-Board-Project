@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanban Board</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css" />
+  <style>
+    /* All existing CSS from previous code */
+    :root {
+      /* Light mode colors */
+      --bg-primary: #f9fafb;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f3f4f6;
+      --sidebar-bg: #1f2937;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --sidebar-text: #f9fafb;
+      --border-color: #e5e7eb;
+      --accent-color: #4f46e5;
+      --accent-hover: #4338ca;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --info-color: #3b82f6;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --card-hover-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      --modal-overlay: rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="dark"] {
+      /* Dark mode colors */
+      --bg-primary: #111827;
+      --bg-secondary: #1f2937;
+      --bg-tertiary: #374151;
+      --sidebar-bg: #0f172a;
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --sidebar-text: #f9fafb;
+      --border-color: #4b5563;
+      --accent-color: #6366f1;
+      --accent-hover: #818cf8;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --info-color: #3b82f6;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --card-hover-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      --modal-overlay: rgba(0, 0, 0, 0.7);
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .bg-theme-primary {
+      background-color: var(--bg-primary);
+    }
+
+    .bg-theme-secondary {
+      background-color: var(--bg-secondary);
+    }
+
+    .bg-theme-tertiary {
+      background-color: var(--bg-tertiary);
+    }
+
+    .bg-sidebar {
+      background-color: var(--sidebar-bg);
+    }
+
+    .text-theme-primary {
+      color: var(--text-primary);
+    }
+
+    .text-theme-secondary {
+      color: var(--text-secondary);
+    }
+
+    .text-sidebar {
+      color: var(--sidebar-text);
+    }
+
+    .border-theme {
+      border-color: var(--border-color);
+    }
+
+    .shadow-theme {
+      box-shadow: var(--card-shadow);
+    }
+
+    .shadow-hover-theme {
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    .theme-transition {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background-color: var(--sidebar-bg);
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 40;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-content {
+      padding: 1.5rem;
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Page Content */
+    .page-content {
+      display: none;
+    }
+
+    .page-content.active {
+      display: block;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Sidebar Toggle Button */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 50;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    /* Priority badges */
+    .priority-low {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .priority-medium {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .priority-high {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Status badges */
+    .status-backlog {
+      background-color: rgba(156, 163, 175, 0.1);
+      color: #6b7280;
+      border: 1px solid rgba(156, 163, 175, 0.3);
+    }
+
+    .status-in-progress {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .status-in-review {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-done {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) var(--bg-tertiary);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: var(--accent-color);
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background-color: var(--accent-hover);
+    }
+
+    /* Task card styles */
+    .task-card {
+      transition: all 0.2s ease;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .task-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    .task-card.dragging {
+      opacity: 0.5;
+      background-color: var(--bg-tertiary);
+      transform: rotate(3deg);
+    }
+
+    /* Column styles */
+    .column {
+      transition: background-color 0.2s ease;
+      background-color: var(--bg-tertiary);
+    }
+
+    .column.drag-over {
+      background-color: var(--accent-color);
+      opacity: 0.1;
+    }
+
+    /* Sidebar menu items */
+    .sidebar-menu-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .sidebar-menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+
+    .sidebar-menu-item.active {
+      background-color: var(--accent-color);
+    }
+
+    .sidebar-menu-item i {
+      width: 20px;
+      margin-right: 0.75rem;
+    }
+
+    /* Sidebar stats */
+    .sidebar-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Sidebar project section */
+    .sidebar-project {
+      padding: 0.75rem;
+      border-left: 3px solid var(--accent-color);
+      background-color: rgba(255, 255, 255, 0.03);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Overlay for mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 30;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Calendar Styles */
+    .fc {
+      background-color: var(--bg-secondary);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+      border-color: var(--border-color);
+    }
+
+    .fc-theme-standard .fc-scrollgrid {
+      border-color: var(--border-color);
+    }
+
+    .fc .fc-button-primary {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    .fc .fc-button-primary:hover {
+      background-color: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+      background-color: rgba(79, 70, 229, 0.1);
+    }
+
+    .fc .fc-event {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    /* Team Cards */
+    .team-card {
+      transition: all 0.3s ease;
+    }
+
+    .team-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    /* Analytics Charts */
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .sidebar-toggle {
+        display: flex;
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      .board {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .board {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .sidebar {
+        width: 260px;
+      }
+
+      .fc-toolbar {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .fc-toolbar-chunk {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal {
+        margin: 0.5rem;
+      }
+    }
+
+    /* Animation for task cards */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .task-card {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Status indicators */
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .status-indicator.backlog {
+      background-color: #6b7280;
+    }
+
+    .status-indicator.in-progress {
+      background-color: #3b82f6;
+    }
+
+    .status-indicator.in-review {
+      background-color: #f59e0b;
+    }
+
+    .status-indicator.done {
+      background-color: #10b981;
+    }
+
+    /* Column content adjustments */
+    .column-content {
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+
+    /* Empty state */
+    .empty-state {
+      color: var(--text-tertiary);
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      background-color: var(--modal-overlay);
+    }
+
+    /* Tab Styles */
+    .tab {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .tab.active {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    /* Event types for calendar */
+    .event-type-meeting {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
+    }
+
+    .event-type-deadline {
+      background-color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    .event-type-task {
+      background-color: #10b981;
+      border-color: #10b981;
+    }
+
+    .event-type-reminder {
+      background-color: #f59e0b;
+      border-color: #f59e0b;
+    }
+  </style>
+</head>
+
+<body class="bg-theme-primary theme-transition">
+  <!-- Sidebar Toggle Button -->
+  <button class="sidebar-toggle" id="sidebar-toggle">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="main-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar custom-scrollbar" id="sidebar">
+      <div class="sidebar-content">
+        <!-- Sidebar Header -->
+        <div class="mb-8">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-10 h-10 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center mr-3">
+              <i class="fas fa-tasks text-white text-lg"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-sidebar">Kanban Board</h2>
+              <p class="text-xs text-gray-400">Task Management</p>
+            </div>
+          </div>
+
+          <!-- Theme Toggle -->
+          <div class="flex items-center justify-between mb-6 p-3 rounded-lg bg-gray-800">
+            <div class="flex items-center">
+              <i class="fas fa-sun text-yellow-400 mr-2"></i>
+              <span class="text-sidebar text-sm">Theme</span>
+            </div>
+            <button id="theme-toggle" class="relative w-12 h-6 rounded-full bg-gray-700">
+              <span class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300"
+                id="theme-toggle-slider"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="mb-8">
+          <h3 class="text-sidebar text-sm font-semibold uppercase tracking-wider mb-4 text-gray-400">Navigation</h3>
+          <div class="sidebar-menu-item active" data-page="board">
+            <i class="fas fa-columns"></i>
+            <span>Board Overview</span>
+          </div>
+          <div class="sidebar-menu-item" data-page="my-tasks">
+            <i class="fas fa-tasks"></i>
+            <span>My Tasks</span>
+            <span class="ml-auto bg-indigo-500 text-white text-xs rounded-full px-2 py-1">12</span>
+          </div>
+          <div class="sidebar-menu-item" data-page="calendar">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Calendar</span>
+          </div>
+          <div class="sidebar-menu-item" data-page="analytics">
+            <i class="fas fa-chart-line"></i>
+            <span>Analytics</span>
+          </div>
+          <div class="sidebar-menu-item" data-page="team">
+            <i class="fas fa-users"></i>
+            <span>Team</span>
+          </div>
+        </nav>
+
+        <!-- Projects Section -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sidebar text-sm font-semibold uppercase tracking-wider text-gray-400">Projects</h3>
+            <button class="text-gray-400 hover:text-white" id="add-project-btn">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          <div class="sidebar-project">
+            <h4 class="text-sidebar font-medium mb-1">Website Redesign</h4>
+            <p class="text-gray-400 text-sm">5 tasks • 2 members</p>
+          </div>
+          <div class="sidebar-project">
+            <h4 class="text-sidebar font-medium mb-1">Mobile App</h4>
+            <p class="text-gray-400 text-sm">8 tasks • 4 members</p>
+          </div>
+          <div class="sidebar-project">
+            <h4 class="text-sidebar font-medium mb-1">Marketing Campaign</h4>
+            <p class="text-gray-400 text-sm">3 tasks • 3 members</p>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="mb-8">
+          <h3 class="text-sidebar text-sm font-semibold uppercase tracking-wider mb-4 text-gray-400">Quick Stats</h3>
+          <div class="sidebar-stat">
+            <span class="text-sidebar text-sm">Total Tasks</span>
+            <span class="text-white font-bold" id="sidebar-total-tasks">0</span>
+          </div>
+          <div class="sidebar-stat">
+            <span class="text-sidebar text-sm">Completed</span>
+            <span class="text-green-400 font-bold" id="sidebar-completed-tasks">0</span>
+          </div>
+          <div class="sidebar-stat">
+            <span class="text-sidebar text-sm">In Progress</span>
+            <span class="text-blue-400 font-bold" id="sidebar-inprogress-tasks">0</span>
+          </div>
+          <div class="sidebar-stat">
+            <span class="text-sidebar text-sm">Overdue</span>
+            <span class="text-red-400 font-bold" id="sidebar-overdue-tasks">0</span>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="mb-8">
+          <h3 class="text-sidebar text-sm font-semibold uppercase tracking-wider mb-4 text-gray-400">Filters</h3>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2 rounded border-gray-600 bg-gray-700" checked>
+              <span class="text-sidebar text-sm">Show High Priority</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2 rounded border-gray-600 bg-gray-700">
+              <span class="text-sidebar text-sm">Show Due Today</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" class="mr-2 rounded border-gray-600 bg-gray-700" checked>
+              <span class="text-sidebar text-sm">Show Assigned to Me</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- User Profile -->
+        <div class="mt-auto pt-6 border-t border-gray-800">
+          <div class="flex items-center">
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold mr-3">
+              JD
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sidebar font-medium">John Doe</h4>
+              <p class="text-gray-400 text-sm">Project Manager</p>
+            </div>
+            <button class="text-gray-400 hover:text-white" id="settings-btn">
+              <i class="fas fa-cog"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header section -->
+      <header class="bg-theme-secondary shadow-theme theme-transition">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div class="flex items-center space-x-3">
+            <div class="md:hidden">
+              <h1 class="text-xl font-bold text-theme-primary" id="page-title">Kanban Board</h1>
+              <p class="text-xs text-theme-secondary" id="page-subtitle">Organize your work efficiently</p>
+            </div>
+            <div class="hidden md:block">
+              <h1 class="text-2xl font-bold text-theme-primary" id="page-title-desktop">Kanban Board</h1>
+              <p class="text-sm text-theme-secondary" id="page-subtitle-desktop">Organize your work efficiently</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <!-- Stats Badge -->
+            <div class="hidden md:block px-3 py-1 rounded-full bg-theme-tertiary text-theme-secondary text-sm" id="stats-badge">
+              <span id="total-tasks">0</span> tasks
+            </div>
+
+            <!-- Search -->
+            <div class="relative hidden md:block" id="search-container">
+              <input type="text" placeholder="Search..."
+                class="pl-10 pr-4 py-2 rounded-lg bg-theme-primary text-theme-primary border border-theme focus:outline-none focus:ring-2"
+                style="border-color: var(--border-color);" id="global-search">
+              <i class="fas fa-search absolute left-3 top-3 text-theme-secondary"></i>
+            </div>
+
+            <!-- Notifications -->
+            <button class="relative p-2 text-theme-secondary hover:text-theme-primary" id="notifications-btn">
+              <i class="fas fa-bell"></i>
+              <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            <!-- Add Button (contextual) -->
+            <button id="add-context-btn"
+              class="px-4 py-2 rounded-lg text-white font-medium flex items-center space-x-2 theme-transition"
+              style="background-color: var(--accent-color);">
+              <i class="fas fa-plus"></i>
+              <span class="hidden md:inline" id="add-btn-text">Add Task</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="container mx-auto px-4 py-6">
+        <!-- Board Overview Page (Default) -->
+        <div id="board-page" class="page-content active">
+          <!-- Mobile filters and stats -->
+          <div class="md:hidden mb-4 p-3 rounded-lg bg-theme-secondary shadow-theme">
+            <div class="flex justify-between items-center">
+              <div class="text-sm text-theme-secondary">
+                <span id="mobile-total-tasks">0</span> tasks total
+              </div>
+              <div class="flex space-x-2">
+                <button id="filter-btn" class="p-2 text-theme-secondary hover:text-theme-primary theme-transition">
+                  <i class="fas fa-filter"></i>
+                </button>
+                <button id="sort-btn" class="p-2 text-theme-secondary hover:text-theme-primary theme-transition">
+                  <i class="fas fa-sort-amount-down"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Board Columns -->
+          <div id="board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 custom-scrollbar">
+            <!-- Backlog Column -->
+            <div class="column rounded-xl p-4 theme-transition" data-status="backlog">
+              <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                  <span class="status-indicator backlog"></span>
+                  <h2 class="text-lg font-semibold text-theme-primary">Backlog</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-bold status-backlog" id="backlog-count">0</span>
+                  <button class="add-task-column-btn p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+                    title="Add task to backlog">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="column-content space-y-3 custom-scrollbar" id="backlog-tasks" data-status="backlog">
+                <!-- Tasks will be added here -->
+                <div class="empty-state text-center py-8">
+                  <i class="fas fa-inbox text-2xl mb-2"></i>
+                  <p class="text-sm">No tasks in backlog</p>
+                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                    data-status="backlog">
+                    Add your first task
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="column rounded-xl p-4 theme-transition" data-status="in-progress">
+              <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                  <span class="status-indicator in-progress"></span>
+                  <h2 class="text-lg font-semibold text-theme-primary">In Progress</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-bold status-in-progress"
+                    id="in-progress-count">0</span>
+                  <button class="add-task-column-btn p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+                    title="Add task to in progress">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="column-content space-y-3 custom-scrollbar" id="in-progress-tasks" data-status="in-progress">
+                <!-- Tasks will be added here -->
+                <div class="empty-state text-center py-8">
+                  <i class="fas fa-spinner text-2xl mb-2"></i>
+                  <p class="text-sm">No tasks in progress</p>
+                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                    data-status="in-progress">
+                    Move a task here
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- In Review Column -->
+            <div class="column rounded-xl p-4 theme-transition" data-status="in-review">
+              <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                  <span class="status-indicator in-review"></span>
+                  <h2 class="text-lg font-semibold text-theme-primary">In Review</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-bold status-in-review" id="in-review-count">0</span>
+                  <button class="add-task-column-btn p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+                    title="Add task to in review">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="column-content space-y-3 custom-scrollbar" id="in-review-tasks" data-status="in-review">
+                <!-- Tasks will be added here -->
+                <div class="empty-state text-center py-8">
+                  <i class="fas fa-eye text-2xl mb-2"></i>
+                  <p class="text-sm">No tasks in review</p>
+                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                    data-status="in-review">
+                    Add review task
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="column rounded-xl p-4 theme-transition" data-status="done">
+              <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                  <span class="status-indicator done"></span>
+                  <h2 class="text-lg font-semibold text-theme-primary">Done</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-bold status-done" id="done-count">0</span>
+                  <button class="add-task-column-btn p-1 text-theme-secondary hover:text-theme-primary theme-transition"
+                    title="Add task to done">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="column-content space-y-3 custom-scrollbar" id="done-tasks" data-status="done">
+                <!-- Tasks will be added here -->
+                <div class="empty-state text-center py-8">
+                  <i class="fas fa-check-circle text-2xl mb-2"></i>
+                  <p class="text-sm">No completed tasks</p>
+                  <button class="add-task-to-column mt-2 text-sm text-theme-secondary hover:text-accent theme-transition"
+                    data-status="done">
+                    Mark a task done
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 stats-grid">
+            <div class="bg-theme-secondary rounded-lg p-4 shadow-theme">
+              <div class="text-sm text-theme-secondary">Total Tasks</div>
+              <div class="text-2xl font-bold text-theme-primary" id="stats-total">0</div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-4 shadow-theme">
+              <div class="text-sm text-theme-secondary">High Priority</div>
+              <div class="text-2xl font-bold" style="color: var(--danger-color);" id="stats-high">0</div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-4 shadow-theme">
+              <div class="text-sm text-theme-secondary">Due Today</div>
+              <div class="text-2xl font-bold" style="color: var(--warning-color);" id="stats-due">0</div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-4 shadow-theme">
+              <div class="text-sm text-theme-secondary">Completed</div>
+              <div class="text-2xl font-bold" style="color: var(--success-color);" id="stats-completed">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- My Tasks Page -->
+        <div id="my-tasks-page" class="page-content">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-theme-primary mb-2">My Tasks</h2>
+            <p class="text-theme-secondary">Tasks assigned to you across all projects</p>
+          </div>
+
+          <!-- Task Filters -->
+          <div class="bg-theme-secondary rounded-lg p-4 mb-6 shadow-theme">
+            <div class="flex flex-wrap gap-4">
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-theme-primary mb-2">Filter by Status</label>
+                <select id="my-tasks-status-filter"
+                  class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+                  <option value="all">All Statuses</option>
+                  <option value="backlog">Backlog</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="in-review">In Review</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-theme-primary mb-2">Filter by Priority</label>
+                <select id="my-tasks-priority-filter"
+                  class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+                  <option value="all">All Priorities</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-theme-primary mb-2">Sort By</label>
+                <select id="my-tasks-sort"
+                  class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+                  <option value="due-date">Due Date</option>
+                  <option value="priority">Priority</option>
+                  <option value="created">Created Date</option>
+                  <option value="title">Title</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tasks List -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="my-tasks-container">
+            <!-- Tasks will be loaded here -->
+            <div class="col-span-full text-center py-12">
+              <i class="fas fa-tasks text-4xl text-theme-secondary mb-4"></i>
+              <h3 class="text-xl font-semibold text-theme-primary mb-2">No tasks assigned to you</h3>
+              <p class="text-theme-secondary">Tasks assigned to you will appear here</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar Page -->
+        <div id="calendar-page" class="page-content">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-theme-primary mb-2">Calendar</h2>
+            <p class="text-theme-secondary">Schedule and manage your deadlines and meetings</p>
+          </div>
+
+          <!-- Calendar Controls -->
+          <div class="bg-theme-secondary rounded-lg p-4 mb-6 shadow-theme">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+              <div class="flex items-center space-x-4">
+                <button id="prev-month" class="p-2 text-theme-secondary hover:text-theme-primary">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <h3 class="text-lg font-semibold text-theme-primary" id="current-month">January 2024</h3>
+                <button id="next-month" class="p-2 text-theme-secondary hover:text-theme-primary">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+                <button id="today-btn" class="px-4 py-2 rounded-lg text-white" style="background-color: var(--accent-color);">
+                  Today
+                </button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button class="tab active" data-view="month">Month</button>
+                <button class="tab" data-view="week">Week</button>
+                <button class="tab" data-view="day">Day</button>
+                <button class="tab" data-view="list">List</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar -->
+          <div class="bg-theme-secondary rounded-lg p-4 shadow-theme mb-6">
+            <div id="calendar"></div>
+          </div>
+
+          <!-- Upcoming Events -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+              <h3 class="text-lg font-semibold text-theme-primary mb-4">Upcoming Deadlines</h3>
+              <div class="space-y-3" id="upcoming-deadlines">
+                <!-- Deadlines will be loaded here -->
+                <div class="bg-theme-primary rounded-lg p-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-theme-primary">No upcoming deadlines</h4>
+                      <p class="text-sm text-theme-secondary">Add tasks with due dates to see them here</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-theme-primary mb-4">Quick Add Event</h3>
+              <div class="bg-theme-primary rounded-lg p-4">
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-theme-primary mb-1">Event Title</label>
+                    <input type="text" id="event-title"
+                      class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-secondary text-theme-primary focus:outline-none focus:ring-2">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-theme-primary mb-1">Date</label>
+                    <input type="date" id="event-date"
+                      class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-secondary text-theme-primary focus:outline-none focus:ring-2">
+                  </div>
+                  <button id="add-event-btn" class="w-full px-4 py-2 rounded-lg text-white"
+                    style="background-color: var(--accent-color);">
+                    Add Event
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics-page" class="page-content">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-theme-primary mb-2">Analytics Dashboard</h2>
+            <p class="text-theme-secondary">Track productivity and team performance</p>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+              <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-blue-500 bg-opacity-10 mr-4">
+                  <i class="fas fa-tasks text-blue-500"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-theme-secondary">Total Tasks</p>
+                  <h3 class="text-2xl font-bold text-theme-primary" id="analytics-total-tasks">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+              <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-green-500 bg-opacity-10 mr-4">
+                  <i class="fas fa-check-circle text-green-500"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-theme-secondary">Completed Tasks</p>
+                  <h3 class="text-2xl font-bold text-theme-primary" id="analytics-completed-tasks">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+              <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-yellow-500 bg-opacity-10 mr-4">
+                  <i class="fas fa-clock text-yellow-500"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-theme-secondary">Avg. Time to Complete</p>
+                  <h3 class="text-2xl font-bold text-theme-primary" id="analytics-avg-time">0d</h3>
+                </div>
+              </div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+              <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-red-500 bg-opacity-10 mr-4">
+                  <i class="fas fa-exclamation-triangle text-red-500"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-theme-secondary">Overdue Tasks</p>
+                  <h3 class="text-2xl font-bold text-theme-primary" id="analytics-overdue-tasks">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+              <h3 class="text-lg font-semibold text-theme-primary mb-4">Task Status Distribution</h3>
+              <div class="chart-container">
+                <canvas id="status-chart"></canvas>
+              </div>
+            </div>
+            <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+              <h3 class="text-lg font-semibold text-theme-primary mb-4">Task Priority Distribution</h3>
+              <div class="chart-container">
+                <canvas id="priority-chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Performance -->
+          <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-semibold text-theme-primary">Team Performance</h3>
+              <select id="performance-period"
+                class="px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-theme">
+                    <th class="text-left py-3 px-4 text-theme-primary font-medium">Team Member</th>
+                    <th class="text-left py-3 px-4 text-theme-primary font-medium">Assigned Tasks</th>
+                    <th class="text-left py-3 px-4 text-theme-primary font-medium">Completed</th>
+                    <th class="text-left py-3 px-4 text-theme-primary font-medium">In Progress</th>
+                    <th class="text-left py-3 px-4 text-theme-primary font-medium">Completion Rate</th>
+                  </tr>
+                </thead>
+                <tbody id="team-performance-table">
+                  <!-- Team data will be loaded here -->
+                  <tr>
+                    <td colspan="5" class="text-center py-8 text-theme-secondary">
+                      No team performance data available
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Page -->
+        <div id="team-page" class="page-content">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-theme-primary mb-2">Team Management</h2>
+            <p class="text-theme-secondary">Manage your team members and their assignments</p>
+          </div>
+
+          <!-- Team Members Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            <!-- Team member cards will be loaded here -->
+            <div class="team-card bg-theme-secondary rounded-xl p-6 shadow-theme">
+              <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
+                  JD
+                </div>
+                <h3 class="text-lg font-semibold text-theme-primary mb-1">John Doe</h3>
+                <p class="text-sm text-theme-secondary mb-3">Project Manager</p>
+                <div class="flex items-center space-x-2 mb-4">
+                  <span class="px-2 py-1 bg-blue-500 bg-opacity-10 text-blue-500 text-xs rounded-full">8 Tasks</span>
+                  <span class="px-2 py-1 bg-green-500 bg-opacity-10 text-green-500 text-xs rounded-full">75% Done</span>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="p-2 text-theme-secondary hover:text-theme-primary">
+                    <i class="fas fa-envelope"></i>
+                  </button>
+                  <button class="p-2 text-theme-secondary hover:text-theme-primary">
+                    <i class="fas fa-phone"></i>
+                  </button>
+                  <button class="p-2 text-theme-secondary hover:text-theme-primary">
+                    <i class="fas fa-chart-bar"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Team Member -->
+          <div class="bg-theme-secondary rounded-lg p-6 shadow-theme mb-8">
+            <h3 class="text-lg font-semibold text-theme-primary mb-4">Add Team Member</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-theme-primary mb-1">Full Name</label>
+                <input type="text" id="team-member-name"
+                  class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-theme-primary mb-1">Email</label>
+                <input type="email" id="team-member-email"
+                  class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-theme-primary mb-1">Role</label>
+                <select id="team-member-role"
+                  class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2">
+                  <option value="developer">Developer</option>
+                  <option value="designer">Designer</option>
+                  <option value="manager">Project Manager</option>
+                  <option value="qa">QA Engineer</option>
+                  <option value="analyst">Business Analyst</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button id="add-team-member-btn" class="w-full px-4 py-2 rounded-lg text-white"
+                  style="background-color: var(--accent-color);">
+                  Add Member
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Projects -->
+          <div class="bg-theme-secondary rounded-lg p-6 shadow-theme">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-semibold text-theme-primary">Team Projects</h3>
+              <button class="px-4 py-2 rounded-lg text-white" style="background-color: var(--accent-color);">
+                <i class="fas fa-plus mr-2"></i> New Project
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="team-projects">
+              <!-- Projects will be loaded here -->
+              <div class="bg-theme-primary rounded-lg p-4">
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 class="font-semibold text-theme-primary">Website Redesign</h4>
+                    <p class="text-sm text-theme-secondary">UI/UX Design Team</p>
+                  </div>
+                  <span class="px-2 py-1 bg-purple-500 bg-opacity-10 text-purple-500 text-xs rounded-full">Active</span>
+                </div>
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-theme-primary mb-1">
+                    <span>Progress</span>
+                    <span>65%</span>
+                  </div>
+                  <div class="w-full bg-theme-tertiary rounded-full h-2">
+                    <div class="bg-purple-500 h-2 rounded-full" style="width: 65%"></div>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex -space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 border-2 border-theme-secondary"></div>
+                    <div class="w-8 h-8 rounded-full bg-green-500 border-2 border-theme-secondary"></div>
+                    <div class="w-8 h-8 rounded-full bg-yellow-500 border-2 border-theme-secondary"></div>
+                  </div>
+                  <span class="text-sm text-theme-secondary">12 tasks</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- All existing modals (Task Modal, Detail Modal, Move Modal, Toast) remain the same -->
+  <!-- Add Task Modal -->
+  <div id="task-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="modal-overlay absolute inset-0 theme-transition" id="modal-overlay"></div>
+    <div class="bg-theme-secondary rounded-xl shadow-2xl w-full max-w-md mx-4 relative z-10 theme-transition">
+      <div class="flex justify-between items-center border-b border-theme px-6 py-4">
+        <h3 class="text-lg font-semibold text-theme-primary" id="modal-title">Add New Task</h3>
+        <button id="close-modal" class="text-theme-secondary hover:text-theme-primary theme-transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      <form id="task-form" class="p-6">
+        <div class="mb-4">
+          <label for="task-title" class="block text-sm font-medium text-theme-primary mb-1">
+            Title <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="task-title"
+            class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+            style="border-color: var(--border-color);" placeholder="Enter task title" required />
+        </div>
+        <div class="mb-4">
+          <label for="task-description" class="block text-sm font-medium text-theme-primary mb-1">Description</label>
+          <textarea id="task-description" rows="3"
+            class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+            style="border-color: var(--border-color);" placeholder="Enter task description"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="task-status" class="block text-sm font-medium text-theme-primary mb-1">Status</label>
+            <select id="task-status"
+              class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+              style="border-color: var(--border-color);">
+              <option value="backlog">Backlog</option>
+              <option value="in-progress">In Progress</option>
+              <option value="in-review">In Review</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          <div>
+            <label for="task-priority" class="block text-sm font-medium text-theme-primary mb-1">Priority</label>
+            <select id="task-priority"
+              class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+              style="border-color: var(--border-color);">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-6">
+          <label for="task-due-date" class="block text-sm font-medium text-theme-primary mb-1">Due Date</label>
+          <input type="date" id="task-due-date"
+            class="w-full px-3 py-2 border border-theme rounded-lg bg-theme-primary text-theme-primary focus:outline-none focus:ring-2"
+            style="border-color: var(--border-color);" />
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button type="button" id="cancel-task"
+            class="px-4 py-2 border border-theme rounded-lg text-theme-primary hover:bg-theme-tertiary theme-transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 theme-transition"
+            style="background-color: var(--accent-color);">
+            Add Task
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Task Detail Modal -->
+  <div id="detail-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="modal-overlay absolute inset-0 theme-transition" id="detail-modal-overlay"></div>
+    <div class="bg-theme-secondary rounded-xl shadow-2xl w-full max-w-md mx-4 relative z-10 theme-transition">
+      <div class="flex justify-between items-center border-b border-theme px-6 py-4">
+        <h3 class="text-lg font-semibold text-theme-primary">Task Details</h3>
+        <button id="close-detail-modal" class="text-theme-secondary hover:text-theme-primary theme-transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        <div class="mb-6">
+          <div class="flex items-start justify-between mb-4">
+            <h4 id="detail-title" class="text-xl font-bold text-theme-primary pr-4"></h4>
+            <div class="flex space-x-2">
+              <span id="detail-status" class="inline-block px-3 py-1 text-xs font-semibold rounded-full"></span>
+              <span id="detail-priority" class="inline-block px-3 py-1 text-xs font-semibold rounded-full"></span>
+            </div>
+          </div>
+          <div class="bg-theme-primary rounded-lg p-4 mb-4">
+            <p id="detail-description" class="text-theme-secondary"></p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-theme-primary rounded-lg p-3">
+              <div class="flex items-center text-sm text-theme-secondary mb-1">
+                <i class="fas fa-calendar-alt mr-2"></i>
+                <span>Due Date</span>
+              </div>
+              <div id="detail-due-date" class="font-medium text-theme-primary"></div>
+            </div>
+            <div class="bg-theme-primary rounded-lg p-3">
+              <div class="flex items-center text-sm text-theme-secondary mb-1">
+                <i class="fas fa-clock mr-2"></i>
+                <span>Created</span>
+              </div>
+              <div id="detail-created-at" class="font-medium text-theme-primary"></div>
+            </div>
+          </div>
+        </div>
+        <div class="border-t border-theme pt-4">
+          <h5 class="text-sm font-semibold text-theme-primary mb-3">Actions</h5>
+          <div class="flex space-x-2">
+            <button id="edit-task-btn"
+              class="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 theme-transition"
+              style="background-color: var(--info-color);">
+              <i class="fas fa-edit mr-2"></i> Edit
+            </button>
+            <button id="delete-task-btn"
+              class="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 theme-transition"
+              style="background-color: var(--danger-color);">
+              <i class="fas fa-trash mr-2"></i> Delete
+            </button>
+            <button id="move-task-btn"
+              class="flex-1 px-4 py-2 rounded-lg text-sm font-medium border border-theme text-theme-primary hover:bg-theme-tertiary theme-transition">
+              <i class="fas fa-arrows-alt mr-2"></i> Move
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move Task Modal -->
+  <div id="move-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="modal-overlay absolute inset-0 theme-transition" id="move-modal-overlay"></div>
+    <div class="bg-theme-secondary rounded-xl shadow-2xl w-full max-w-sm mx-4 relative z-10 theme-transition">
+      <div class="flex justify-between items-center border-b border-theme px-6 py-4">
+        <h3 class="text-lg font-semibold text-theme-primary">Move Task</h3>
+        <button id="close-move-modal" class="text-theme-secondary hover:text-theme-primary theme-transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        <p class="text-theme-secondary mb-4">Select new status:</p>
+        <div class="space-y-2">
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="backlog">
+            <span class="status-indicator backlog mr-3"></span>
+            <span class="text-theme-primary">Backlog</span>
+          </button>
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="in-progress">
+            <span class="status-indicator in-progress mr-3"></span>
+            <span class="text-theme-primary">In Progress</span>
+          </button>
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="in-review">
+            <span class="status-indicator in-review mr-3"></span>
+            <span class="text-theme-primary">In Review</span>
+          </button>
+          <button class="move-status-btn w-full text-left px-4 py-3 rounded-lg hover:bg-theme-tertiary theme-transition"
+            data-status="done">
+            <span class="status-indicator done mr-3"></span>
+            <span class="text-theme-primary">Done</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast"
+    class="fixed bottom-4 right-4 bg-theme-secondary text-theme-primary px-6 py-3 rounded-lg shadow-2xl z-50 hidden theme-transition">
+    <div class="flex items-center">
+      <i id="toast-icon" class="fas fa-check-circle mr-3" style="color: var(--success-color);"></i>
+      <span id="toast-message">Task added successfully!</span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // DOM Elements
+      const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+      const pageContents = document.querySelectorAll('.page-content');
+      const pageTitle = document.getElementById('page-title');
+      const pageSubtitle = document.getElementById('page-subtitle');
+      const pageTitleDesktop = document.getElementById('page-title-desktop');
+      const pageSubtitleDesktop = document.getElementById('page-subtitle-desktop');
+      const addContextBtn = document.getElementById('add-context-btn');
+      const addBtnText = document.getElementById('add-btn-text');
+      const searchContainer = document.getElementById('search-container');
+      const globalSearch = document.getElementById('global-search');
+      const statsBadge = document.getElementById('stats-badge');
+      
+      // Initialize pages
+      let currentPage = 'board';
+      const pages = {
+        'board': {
+          title: 'Kanban Board',
+          subtitle: 'Organize your work efficiently',
+          addBtnText: 'Add Task',
+          showSearch: true,
+          showStats: true
+        },
+        'my-tasks': {
+          title: 'My Tasks',
+          subtitle: 'Tasks assigned to you',
+          addBtnText: 'Add Task',
+          showSearch: true,
+          showStats: true
+        },
+        'calendar': {
+          title: 'Calendar',
+          subtitle: 'Schedule and manage deadlines',
+          addBtnText: 'Add Event',
+          showSearch: false,
+          showStats: false
+        },
+        'analytics': {
+          title: 'Analytics',
+          subtitle: 'Track productivity and performance',
+          addBtnText: 'Export Report',
+          showSearch: false,
+          showStats: false
+        },
+        'team': {
+          title: 'Team',
+          subtitle: 'Manage team members and projects',
+          addBtnText: 'Add Member',
+          showSearch: true,
+          showStats: false
+        }
+      };
+
+      // Page Navigation
+      function navigateToPage(page) {
+        // Update active menu item
+        sidebarMenuItems.forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.page === page) {
+            item.classList.add('active');
+          }
+        });
+
+        // Update active page content
+        pageContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === `${page}-page`) {
+            content.classList.add('active');
+          }
+        });
+
+        // Update page titles
+        const pageConfig = pages[page];
+        pageTitle.textContent = pageConfig.title;
+        pageSubtitle.textContent = pageConfig.subtitle;
+        pageTitleDesktop.textContent = pageConfig.title;
+        pageSubtitleDesktop.textContent = pageConfig.subtitle;
+        addBtnText.textContent = pageConfig.addBtnText;
+
+        // Update UI elements based on page
+        searchContainer.style.display = pageConfig.showSearch ? 'block' : 'none';
+        statsBadge.style.display = pageConfig.showStats ? 'block' : 'none';
+
+        // Update context button action
+        updateAddButtonAction(page);
+
+        currentPage = page;
+
+        // Initialize page-specific functionality
+        if (page === 'calendar') {
+          initializeCalendar();
+        } else if (page === 'analytics') {
+          initializeAnalytics();
+        } else if (page === 'team') {
+          initializeTeam();
+        } else if (page === 'my-tasks') {
+          initializeMyTasks();
+        }
+
+        // Close sidebar on mobile
+        if (window.innerWidth <= 1024) {
+          const sidebar = document.getElementById('sidebar');
+          const sidebarOverlay = document.getElementById('sidebar-overlay');
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        }
+      }
+
+      // Update add button action based on current page
+      function updateAddButtonAction(page) {
+        addContextBtn.onclick = function() {
+          switch(page) {
+            case 'board':
+            case 'my-tasks':
+              document.getElementById('task-modal').classList.remove('hidden');
+              document.body.style.overflow = 'hidden';
+              break;
+            case 'calendar':
+              // Show quick add event form
+              document.getElementById('event-title').focus();
+              break;
+            case 'analytics':
+              exportAnalyticsReport();
+              break;
+            case 'team':
+              document.getElementById('team-member-name').focus();
+              break;
+          }
+        };
+      }
+
+      // Initialize Calendar
+      function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          headerToolbar: false,
+          themeSystem: 'bootstrap',
+          events: [
+            {
+              title: 'Team Meeting',
+              start: new Date(),
+              className: 'event-type-meeting'
+            },
+            {
+              title: 'Project Deadline',
+              start: new Date(new Date().setDate(new Date().getDate() + 5)),
+              className: 'event-type-deadline'
+            },
+            {
+              title: 'Client Review',
+              start: new Date(new Date().setDate(new Date().getDate() + 10)),
+              className: 'event-type-reminder'
+            }
+          ],
+          eventClick: function(info) {
+            alert('Event: ' + info.event.title);
+          }
+        });
+
+        calendar.render();
+
+        // Update current month display
+        const currentMonthEl = document.getElementById('current-month');
+        const currentDate = calendar.getDate();
+        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', { 
+          month: 'long', 
+          year: 'numeric' 
+        });
+
+        // Calendar controls
+        document.getElementById('prev-month').onclick = () => {
+          calendar.prev();
+          updateCurrentMonth(calendar);
+        };
+
+        document.getElementById('next-month').onclick = () => {
+          calendar.next();
+          updateCurrentMonth(calendar);
+        };
+
+        document.getElementById('today-btn').onclick = () => {
+          calendar.today();
+          updateCurrentMonth(calendar);
+        };
+
+        // View switching
+        document.querySelectorAll('[data-view]').forEach(btn => {
+          btn.onclick = function() {
+            const view = this.dataset.view;
+            document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            calendar.changeView(view + (view === 'list' ? 'Month' : ''));
+          };
+        });
+      }
+
+      function updateCurrentMonth(calendar) {
+        const currentMonthEl = document.getElementById('current-month');
+        const currentDate = calendar.getDate();
+        currentMonthEl.textContent = currentDate.toLocaleDateString('en-US', { 
+          month: 'long', 
+          year: 'numeric' 
+        });
+      }
+
+      // Initialize Analytics
+      function initializeAnalytics() {
+        // Status Distribution Chart
+        const statusCtx = document.getElementById('status-chart').getContext('2d');
+        new Chart(statusCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Backlog', 'In Progress', 'In Review', 'Done'],
+            datasets: [{
+              data: [12, 8, 5, 15],
+              backgroundColor: [
+                '#6b7280',
+                '#3b82f6',
+                '#f59e0b',
+                '#10b981'
+              ],
+              borderWidth: 2,
+              borderColor: 'var(--bg-secondary)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: 'var(--text-primary)',
+                  padding: 20
+                }
+              }
+            }
+          }
+        });
+
+        // Priority Distribution Chart
+        const priorityCtx = document.getElementById('priority-chart').getContext('2d');
+        new Chart(priorityCtx, {
+          type: 'bar',
+          data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+              label: 'Tasks',
+              data: [8, 15, 12],
+              backgroundColor: [
+                '#ef4444',
+                '#f59e0b',
+                '#10b981'
+              ],
+              borderWidth: 0,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'var(--border-color)'
+                },
+                ticks: {
+                  color: 'var(--text-secondary)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: 'var(--text-secondary)'
+                }
+              }
+            }
+          }
+        });
+
+        // Update analytics stats
+        updateAnalyticsStats();
+      }
+
+      function updateAnalyticsStats() {
+        // Simulate data
+        document.getElementById('analytics-total-tasks').textContent = '40';
+        document.getElementById('analytics-completed-tasks').textContent = '15';
+        document.getElementById('analytics-avg-time').textContent = '5.2d';
+        document.getElementById('analytics-overdue-tasks').textContent = '3';
+      }
+
+      function exportAnalyticsReport() {
+        showToast('Analytics report exported successfully!', 'success');
+      }
+
+      // Initialize Team Page
+      function initializeTeam() {
+        // Add team member functionality
+        document.getElementById('add-team-member-btn').onclick = function() {
+          const name = document.getElementById('team-member-name').value;
+          const email = document.getElementById('team-member-email').value;
+          const role = document.getElementById('team-member-role').value;
+
+          if (name && email) {
+            showToast(`Team member ${name} added successfully!`, 'success');
+            document.getElementById('team-member-name').value = '';
+            document.getElementById('team-member-email').value = '';
+            document.getElementById('team-member-role').value = 'developer';
+          } else {
+            showToast('Please fill in all required fields', 'error');
+          }
+        };
+      }
+
+      // Initialize My Tasks Page
+      function initializeMyTasks() {
+        // Filter functionality
+        const statusFilter = document.getElementById('my-tasks-status-filter');
+        const priorityFilter = document.getElementById('my-tasks-priority-filter');
+        const sortSelect = document.getElementById('my-tasks-sort');
+
+        [statusFilter, priorityFilter, sortSelect].forEach(select => {
+          select.onchange = function() {
+            filterMyTasks();
+          };
+        });
+
+        // Initial filter
+        filterMyTasks();
+      }
+
+      function filterMyTasks() {
+        // This would filter and display tasks based on selections
+        // For now, just show a message
+        const container = document.getElementById('my-tasks-container');
+        container.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <i class="fas fa-filter text-4xl text-theme-secondary mb-4"></i>
+            <h3 class="text-xl font-semibold text-theme-primary mb-2">Filter Applied</h3>
+            <p class="text-theme-secondary">Your filtered tasks will appear here</p>
+          </div>
+        `;
+      }
+
+      // Toast Notification Function
+      function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toast-icon');
+        const toastMessage = document.getElementById('toast-message');
+
+        toastMessage.textContent = message;
+
+        if (type === 'error') {
+          toastIcon.className = 'fas fa-exclamation-circle mr-3';
+          toastIcon.style.color = 'var(--danger-color)';
+        } else if (type === 'warning') {
+          toastIcon.className = 'fas fa-exclamation-triangle mr-3';
+          toastIcon.style.color = 'var(--warning-color)';
+        } else {
+          toastIcon.className = 'fas fa-check-circle mr-3';
+          toastIcon.style.color = 'var(--success-color)';
+        }
+
+        toast.classList.remove('hidden');
+
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+
+      // Event Listeners for Navigation
+      sidebarMenuItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const page = this.dataset.page;
+          navigateToPage(page);
+        });
+      });
+
+      // Global search functionality
+      globalSearch.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        // Search logic would go here based on current page
+        console.log(`Searching for: ${searchTerm} on ${currentPage} page`);
+      });
+
+      // Initialize with Board page
+      navigateToPage('board');
+
+      // Keep existing functionality for Board page (tasks, drag & drop, etc.)
+      // ... (Your existing board functionality code goes here)
+      // Note: You'll need to integrate your existing board functionality
+      // with the new multi-page structure
+
+    });
+  </script>
+
+  <!-- Include your existing board functionality script here -->
+  <!-- Make sure to wrap it in a function and call it when board page is active -->
+  <script>
+    // Your existing board functionality code
+    // ... (paste your existing script.js code here)
+    // Make sure to only initialize board functionality when on board page
+  </script>
+</body>
+
+</html>
